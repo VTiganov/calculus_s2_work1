@@ -1,27 +1,55 @@
 import numpy as np
-from scipy.integrate import quad
+import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
 
-# Параметризация кривой: x = t, y = 2/(12t)^(1/3), z = (12t)^(1/3)
-def curve_derivatives(t):
-    dx_dt = 1  # Производная x по t
-    
-    # Производная y по t (используем цепное правило)
-    dy_dt = -2/3 * (12*t)**(-4/3) * 12  # = -8 / (12t)^(4/3)
-    
-    # Производная z по t
-    dz_dt = (1/3) * (12*t)**(-2/3) * 12  # = 4 / (12t)^(2/3)
-    
-    return dx_dt, dy_dt, dz_dt
+# Create figure and 3D axis
+fig = plt.figure(figsize=(12, 10))
+ax = fig.add_subplot(111, projection='3d')
 
-# Функция для подынтегрального выражения (модуль скорости)
-def integrand(t):
-    dx, dy, dz = curve_derivatives(t)
-    return np.sqrt(dx**2 + dy**2 + dz**2)
+# Define the x range
+x = np.linspace(2/3, 18, 400)
 
-# Вычисляем длину кривой от t_min до t_max
-t_min = 2/3
-t_max = 18
-length, error = quad(integrand, t_min, t_max)
+# Calculate z and y from the equations
+z = np.cbrt(12 * x)  # Real root of z^3 = 12x
+y = 2 / z  # From 2zy = 4
 
-print(f"Длина кривой: {length:.5f}")
-print(f"Погрешность вычисления: {error:.5e}")
+# Plot the solution curve
+ax.plot(x, y, z, label='Solution curve: z³=12x and y=2/z', linewidth=3, color='blue')
+
+# Create bounding planes at x=2/3 and x=18
+yy, zz = np.meshgrid(np.linspace(min(y)-1, max(y)+1, 20), 
+                     np.linspace(min(z)-1, max(z)+1, 20))
+
+# Plane at x=2/3 (lower bound)
+ax.plot_surface(np.full_like(yy, 2/3), yy, zz, 
+                alpha=0.3, color='green', label='x=2/3 plane')
+
+# Plane at x=18 (upper bound)
+ax.plot_surface(np.full_like(yy, 18), yy, zz, 
+                alpha=0.3, color='red', label='x=18 plane')
+
+# Add points at the boundaries
+ax.scatter([2/3, 18], 
+           [2/np.cbrt(12*2/3), 2/np.cbrt(12*18)], 
+           [np.cbrt(12*2/3), np.cbrt(12*18)], 
+           color='black', s=100, label='Boundary points')
+
+# Add labels and title
+ax.set_xlabel('X axis')
+ax.set_ylabel('Y axis')
+ax.set_zlabel('Z axis')
+ax.set_title('3D Plot of the System with Bounding Planes')
+
+# Set axis limits to properly show the planes
+ax.set_xlim(0, 20)
+ax.set_ylim(min(y)-1, max(y)+1)
+ax.set_zlim(min(z)-1, max(z)+1)
+
+# Add legend
+ax.legend()
+
+# Set viewing angle
+ax.view_init(elev=25, azim=45)
+
+plt.tight_layout()
+plt.show()
